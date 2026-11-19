@@ -254,6 +254,7 @@
   <div class="tools">
     <div class="search"><input id="q" type="search" placeholder="ابحث بالاسم أو الجوال أو الإدارة أو المدينة"></div>
     <select id="fRegion" aria-label="تصفية بالمنطقة"><option value="">كل المناطق</option></select>
+    <select id="fSpec" aria-label="تصفية بالتخصص"><option value="">كل التخصصات</option></select>
   </div>
   <div class="tools">
     <button class="btn" id="btnAdd" style="background:var(--cover);color:var(--paper)">إضافة عضو</button>
@@ -310,6 +311,7 @@ const ADMINS = {
   'الجوف': ['الإدارة العامة للتعليم بمنطقة الجوف','إدارة التعليم بمحافظة القريات']
 };
 const OTHER = '__other__';
+const SPECS = ['الرياضيات','اللغة العربية','العلوم','الفيزياء','الكيمياء','الأحياء','الدراسات الإسلامية','الدراسات الاجتماعية','اللغة الإنجليزية','الحاسب وتقنية المعلومات','التربية البدنية','التربية الفنية','الصفوف الأولية','رياض الأطفال','التربية الخاصة','التوجيه والإرشاد الطلابي','الإدارة المدرسية','مصادر التعلم'];
 
 /* ───── بناء الحقول (مشترك بين النموذجين) ───── */
 const ar = s => String(s ?? '').replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
@@ -319,12 +321,14 @@ function row(i, k, label, inner){
 function fieldsHTML(btnText, withCancel){
   return `<div class="ledger">
     ${row(1,'name','الاسم الرباعي',`<input name="name" placeholder="محمد بن عبدالله سعيد آل سحمان" autocomplete="off">`)}
-    ${row(2,'job','العمل',`<input name="job" placeholder="معلم رياضيات، مشرف تربوي، قائد مدرسة" autocomplete="off">`)}
-    ${row(3,'region','المنطقة',`<select name="region"><option value="">اختر المنطقة</option>${REGIONS.map(r=>`<option>${r}</option>`).join('')}</select>`)}
-    ${row(4,'admin','الإدارة التعليمية',`<select name="admin"><option value="">اختر المنطقة أولًا</option></select><input name="adminOther" class="sub-input hidden" placeholder="اكتب اسم الإدارة كاملًا، مثل: إدارة التعليم بمحافظة …" autocomplete="off">`)}
-    ${row(5,'city','المدينة',`<input name="city" placeholder="أبها" autocomplete="off">`)}
-    ${row(6,'mobile','الجوال',`<input name="mobile" class="ltr" inputmode="numeric" placeholder="0557376666" autocomplete="off"><div class="hint">عشرة أرقام تبدأ بـ ٠٥، دون مسافات أو رمز الدولة</div>`)}
-    ${row(7,'email','البريد الإلكتروني',`<input name="email" class="ltr" type="email" inputmode="email" placeholder="sehman200@gmail.com" autocomplete="off">`)}
+    ${row(2,'job','العمل',`<input name="job" placeholder="معلم، مشرف تربوي، قائد مدرسة، وكيل" autocomplete="off">`)}
+    ${row(3,'spec','التخصص',`<select name="spec"><option value="">اختر التخصص</option>${SPECS.map(s=>`<option>${s}</option>`).join('')}<option value="${OTHER}">تخصص آخر غير موجود في القائمة</option></select><input name="specOther" class="sub-input hidden" placeholder="اكتب التخصص بالعربية" autocomplete="off">`)}
+    ${row(4,'region','المنطقة',`<select name="region"><option value="">اختر المنطقة</option>${REGIONS.map(r=>`<option>${r}</option>`).join('')}</select>`)}
+    ${row(5,'admin','الإدارة التعليمية',`<select name="admin"><option value="">اختر المنطقة أولًا</option></select><input name="adminOther" class="sub-input hidden" placeholder="اكتب اسم الإدارة كاملًا، مثل: إدارة التعليم بمحافظة …" autocomplete="off">`)}
+    ${row(6,'city','المدينة',`<input name="city" placeholder="أبها" autocomplete="off">`)}
+    ${row(7,'workplace','جهة العمل',`<input name="workplace" placeholder="اسم المدرسة أو مكتب التعليم، مثل: متوسطة الإمام البخاري" autocomplete="off">`)}
+    ${row(8,'mobile','الجوال',`<input name="mobile" class="ltr" inputmode="numeric" placeholder="0557376666" autocomplete="off"><div class="hint">عشرة أرقام تبدأ بـ ٠٥، دون مسافات أو رمز الدولة</div>`)}
+    ${row(9,'email','البريد الإلكتروني',`<input name="email" class="ltr" type="email" inputmode="email" placeholder="sehman200@gmail.com" autocomplete="off">`)}
   </div>
   ${withCancel
     ? `<div class="row-btns"><button class="btn btn-main" type="submit">${btnText}</button><button class="btn" type="button" data-cancel>إلغاء</button></div>`
@@ -332,14 +336,15 @@ function fieldsHTML(btnText, withCancel){
 }
 $('#memberForm').innerHTML = fieldsHTML('تسجيل العضوية', false);
 $('#editForm').innerHTML = fieldsHTML('حفظ', true);
-const regionFilter = $('#fRegion');
+const regionFilter = $('#fRegion'), specFilter = $('#fSpec');
 REGIONS.forEach(r => regionFilter.insertAdjacentHTML('beforeend', `<option>${r}</option>`));
 
 /* ───── التحقق ───── */
-const ORDER = ['name','job','region','admin','city','mobile','email'];
+const ORDER = ['name','job','spec','region','admin','city','workplace','mobile','email'];
 const toLatin = s => String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 const clean = s => String(s||'').replace(/[​-‏‪-‮⁦-⁩﻿]/g,'').replace(/\s+/g,' ').trim();
 const AR_WORDS = /^[ء-غف-يً-ْٰ ]+$/;
+const toArDigits = s => String(s).replace(/[0-9]/g, x => '٠١٢٣٤٥٦٧٨٩'[x]);
 const AR_TEXT  = /^[ء-غف-يً-ْٰ٠-٩ ،,\/\-()]+$/;
 
 function fillAdmins(form, region, value){
@@ -358,9 +363,11 @@ function readForm(form){
   const e = form.elements, d = {};
   d.name = clean(e.name.value);
   d.job = clean(e.job.value);
+  d.spec = e.spec.value === OTHER ? clean(e.specOther.value) : e.spec.value;
   d.region = e.region.value;
   d.admin = e.admin.value === OTHER ? clean(e.adminOther.value) : e.admin.value;
   d.city = clean(e.city.value);
+  d.workplace = clean(e.workplace.value);
   d.mobile = toLatin(clean(e.mobile.value)).replace(/ /g,'');
   d.email = toLatin(clean(e.email.value)).toLowerCase();
   return d;
@@ -377,6 +384,16 @@ function fieldError(k, d, form){
     case 'job':
       if (!v) return 'العمل مطلوب';
       if (!AR_TEXT.test(v) || v.length < 3) return 'اكتب العمل باللغة العربية';
+      return '';
+    case 'spec':
+      if (form.elements.spec.value === OTHER) {
+        if (!v) return 'اكتب التخصص';
+        return AR_TEXT.test(v) && v.length >= 3 ? '' : 'اكتب التخصص باللغة العربية';
+      }
+      return v ? '' : 'اختر التخصص';
+    case 'workplace':
+      if (!v) return 'جهة العمل مطلوبة';
+      if (!AR_TEXT.test(toArDigits(v)) || v.length < 3) return 'اكتب جهة العمل باللغة العربية';
       return '';
     case 'region':
       return REGIONS.includes(v) ? '' : 'اختر المنطقة';
@@ -434,6 +451,11 @@ function wire(form, sequential){
   });
   form.addEventListener('change', e => {
     if (e.target.name === 'region') fillAdmins(form, e.target.value, '');
+    if (e.target.name === 'spec') {
+      const other = form.elements.specOther;
+      other.classList.toggle('hidden', e.target.value !== OTHER);
+      if (e.target.value === OTHER) other.focus();
+    }
     if (e.target.name === 'admin') {
       const other = form.elements.adminOther;
       other.classList.toggle('hidden', e.target.value !== OTHER);
@@ -450,7 +472,10 @@ function wire(form, sequential){
 }
 function fill(form, d){
   form.querySelectorAll('.row').forEach(b => delete b.dataset.touched);
-  ['name','job','city','mobile','email'].forEach(k => form.elements[k].value = d?.[k] || '');
+  ['name','job','city','workplace','mobile','email'].forEach(k => form.elements[k].value = d?.[k] || '');
+  const sp = d?.spec || '', sel = form.elements.spec, so = form.elements.specOther;
+  if (!sp || SPECS.includes(sp)) { sel.value = sp; so.value = ''; } else { sel.value = OTHER; so.value = sp; }
+  so.classList.toggle('hidden', sel.value !== OTHER);
   form.elements.region.value = d?.region || '';
   fillAdmins(form, d?.region || '', d?.admin || '');
 }
@@ -507,7 +532,7 @@ $('#loginForm').addEventListener('submit', async e => {
 async function load(){
   const msg = $('#adminMsg');
   say(msg, 'جارٍ تحميل البيانات…', 'ok');
-  try { ROWS = (await api({action:'list', pass:PASS})).rows; say(msg,''); render(); }
+  try { ROWS = (await api({action:'list', pass:PASS})).rows; say(msg,''); fillSpecFilter(); render(); }
   catch (x) {
     say(msg, x.message, 'err');
     if (/كلمة المرور/.test(x.message)) { PASS=''; store.set(''); route(); }
@@ -520,24 +545,26 @@ function hijri(s){
   try { return new Date(+m[1], +m[2]-1, +m[3], 12).toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-arab', {day:'numeric', month:'long', year:'numeric'}); }
   catch { return ar(esc(s)); }
 }
+function filteredRows(){
+  const q = toLatin($('#q').value).trim().toLowerCase(), rg = regionFilter.value, sp = specFilter.value;
+  return ROWS.filter(r =>
+    (!rg || r.region === rg) && (!sp || r.spec === sp) &&
+    (!q || [r.name,r.mobile,r.email,r.admin,r.city,r.job,r.spec,r.workplace].join(' ').toLowerCase().includes(q)));
+}
 function render(){
-  const q = toLatin($('#q').value).trim().toLowerCase(), rg = regionFilter.value;
-  const shown = ROWS.filter(r =>
-    (!rg || r.region === rg) &&
-    (!q || [r.name,r.mobile,r.email,r.admin,r.city,r.job].join(' ').toLowerCase().includes(q))
-  ).slice().reverse();
+  const shown = filteredRows().slice().reverse();
   $('#stTotal').textContent = ar(ROWS.length);
   $('#stRegions').textContent = ar(new Set(ROWS.map(r=>r.region).filter(Boolean)).size);
   $('#stShown').textContent = ar(shown.length);
   if (!shown.length) {
-    $('#list').innerHTML = `<div class="empty">${ROWS.length ? 'لا أحد يطابق البحث. جرّب كلمة أخرى أو اختر «كل المناطق».' : 'السجلّ فارغ حتى الآن. أرسل رابط التسجيل للأعضاء، أو أضف عضوًا من زر «إضافة عضو».'}</div>`;
+    $('#list').innerHTML = `<div class="empty">${ROWS.length ? 'لا أحد يطابق البحث. جرّب كلمة أخرى، أو اختر «كل المناطق» و«كل التخصصات».' : 'السجلّ فارغ حتى الآن. أرسل رابط التسجيل للأعضاء، أو أضف عضوًا من زر «إضافة عضو».'}</div>`;
     return;
   }
-  $('#list').innerHTML = `<table class="reg"><thead><tr><th>م</th><th>الاسم والعمل</th><th>الإدارة التعليمية</th><th>المنطقة والمدينة</th><th>التواصل</th><th>التسجيل</th><th></th></tr></thead><tbody>
+  $('#list').innerHTML = `<table class="reg"><thead><tr><th>م</th><th>الاسم والعمل</th><th>الإدارة وجهة العمل</th><th>المنطقة والمدينة</th><th>التواصل</th><th>التسجيل</th><th></th></tr></thead><tbody>
   ${shown.map((r,i) => `<tr>
     <td class="n">${ar(shown.length - i)}</td>
-    <td><div class="nm">${esc(r.name)}</div><div class="meta">${esc(r.job)}</div></td>
-    <td data-l="الإدارة">${esc(r.admin)}</td>
+    <td><div class="nm">${esc(r.name)}</div><div class="meta">${esc(r.job)}${r.spec ? ` — ${esc(r.spec)}` : ''}</div></td>
+    <td data-l="الإدارة">${esc(r.admin)}${r.workplace ? `<div class="meta">${esc(r.workplace)}</div>` : ''}</td>
     <td data-l="المنطقة">${esc(r.region)}<div class="meta">${esc(r.city)}</div></td>
     <td data-l="التواصل"><a href="tel:${esc(r.mobile)}">${ar(esc(r.mobile))}</a><div class="meta"><a href="mailto:${esc(r.email)}" dir="ltr">${esc(r.email)}</a></div></td>
     <td data-l="التسجيل"><span class="meta">${hijri(r.created)}<br>${r.source === 'المشرف' ? 'أضافه المشرف' : 'سجّله العضو'}</span></td>
@@ -547,6 +574,13 @@ function render(){
 
 $('#q').addEventListener('input', render);
 regionFilter.addEventListener('change', render);
+specFilter.addEventListener('change', render);
+function fillSpecFilter(){
+  const cur = specFilter.value;
+  const all = [...new Set(SPECS.concat(ROWS.map(r => r.spec).filter(Boolean)))];
+  specFilter.innerHTML = '<option value="">كل التخصصات</option>' + all.map(s => `<option>${esc(s)}</option>`).join('');
+  specFilter.value = all.includes(cur) ? cur : '';
+}
 $('#btnRefresh').onclick = load;
 $('#btnLogout').onclick = () => { PASS=''; store.set(''); location.hash=''; };
 $('#btnHome').onclick = () => { location.hash=''; };
@@ -589,26 +623,23 @@ $('#editForm').addEventListener('submit', async e => {
 });
 
 /* ───── تقرير للطباعة (HTML / PDF) ───── */
-function reportRows(){
-  const q = toLatin($('#q').value).trim().toLowerCase(), rg = regionFilter.value;
-  return ROWS.filter(r =>
-    (!rg || r.region === rg) &&
-    (!q || [r.name,r.mobile,r.email,r.admin,r.city,r.job].join(' ').toLowerCase().includes(q)));
-}
+function reportRows(){ return filteredRows(); }
 function buildReport(rows){
   const fonts = (document.querySelector('style').textContent.match(/@font-face\{[^}]+\}/g) || []).join('\n');
   const logo = document.querySelector('.logo')?.getAttribute('src') || '';
   const rg = regionFilter.value, q = $('#q').value.trim();
-  const scope = rg ? `منطقة ${rg}` : 'جميع المناطق';
+  const sp = specFilter.value;
+  const scope = (rg ? `منطقة ${rg}` : 'جميع المناطق') + (sp ? `، تخصص ${sp}` : '');
   const today = new Date().toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-arab', {day:'numeric', month:'long', year:'numeric'});
   const fname = `سجل-أعضاء-أكاديمية-نخبة-التعليم-${new Date().toISOString().slice(0,10)}.html`;
   const body = rows.map((r,i) => `<tr>
       <td class="n">${ar(i+1)}</td>
       <td class="nm">${esc(r.name)}</td>
       <td>${esc(r.job)}</td>
+      <td>${esc(r.spec)}</td>
       <td>${esc(r.admin)}</td>
-      <td>${esc(r.region)}</td>
-      <td>${esc(r.city)}</td>
+      <td>${esc(r.workplace)}</td>
+      <td>${esc(r.region)}<br><span class="sm">${esc(r.city)}</span></td>
       <td class="num">${ar(esc(r.mobile))}</td>
       <td class="em" dir="ltr">${esc(r.email)}</td>
     </tr>`).join('');
@@ -640,6 +671,8 @@ tr{break-inside:avoid}
 td.n{text-align:center; color:#0b8a7a; font-weight:700; width:9mm}
 td.nm{font-weight:700; white-space:nowrap}
 td.num{white-space:nowrap}
+td .sm{color:#6c7573; font-size:9pt}
+body{font-size:9.8pt}
 td.em{font-family:'Segoe UI', Tahoma, sans-serif; font-size:9.5pt; text-align:left}
 footer{margin-top:10px; display:flex; justify-content:space-between; color:#6c7573; font-size:9pt}
 .empty{text-align:center; padding:30px; color:#6c7573}
@@ -652,7 +685,7 @@ footer{margin-top:10px; display:flex; justify-content:space-between; color:#6c75
   <div><h1>سجلّ أعضاء أكاديمية نخبة التعليم</h1><p>${scope}${q ? ` — نتيجة البحث عن «${esc(q)}»` : ''}، بتاريخ ${today}</p></div>
   <div class="count"><b>${ar(rows.length)}</b>عضوًا</div>
 </header>
-${rows.length ? `<table><thead><tr><th>م</th><th>الاسم الرباعي</th><th>العمل</th><th>الإدارة التعليمية</th><th>المنطقة</th><th>المدينة</th><th>الجوال</th><th>البريد الإلكتروني</th></tr></thead><tbody>${body}</tbody></table>` : `<div class="empty">لا يوجد أعضاء في هذا النطاق.</div>`}
+${rows.length ? `<table><thead><tr><th>م</th><th>الاسم الرباعي</th><th>العمل</th><th>التخصص</th><th>الإدارة التعليمية</th><th>جهة العمل</th><th>المنطقة والمدينة</th><th>الجوال</th><th>البريد الإلكتروني</th></tr></thead><tbody>${body}</tbody></table>` : `<div class="empty">لا يوجد أعضاء في هذا النطاق.</div>`}
 <footer><span>أكاديمية نخبة التعليم</span><span>فكرة وإعداد / محمد آل سحمان</span></footer>
 </div>
 <script>
@@ -676,10 +709,10 @@ $('#btnReport').onclick = () => {
 /* تصدير Excel (CSV بترميز يدعم العربية) */
 $('#btnExport').onclick = () => {
   if (!ROWS.length) return say($('#adminMsg'),'لا توجد بيانات للتصدير','err');
-  const head = ['الاسم الرباعي','العمل','الإدارة التعليمية','المنطقة','المدينة','الجوال','البريد الإلكتروني','تاريخ التسجيل'];
+  const head = ['الاسم الرباعي','العمل','التخصص','الإدارة التعليمية','جهة العمل','المنطقة','المدينة','الجوال','البريد الإلكتروني','تاريخ التسجيل'];
   const q = v => `"${String(v??'').replace(/"/g,'""')}"`;
   const lines = [head.map(q).join(',')].concat(ROWS.map(r =>
-    [q(r.name),q(r.job),q(r.admin),q(r.region),q(r.city),`="${r.mobile}"`,q(r.email),q(r.created)].join(',')));
+    [q(r.name),q(r.job),q(r.spec),q(r.admin),q(r.workplace),q(r.region),q(r.city),`="${r.mobile}"`,q(r.email),q(r.created)].join(',')));
   const blob = new Blob(['﻿' + lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
