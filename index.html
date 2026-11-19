@@ -257,6 +257,7 @@
   </div>
   <div class="tools">
     <button class="btn" id="btnAdd" style="background:var(--cover);color:var(--paper)">إضافة عضو</button>
+    <button class="btn" id="btnReport">تقرير للطباعة وPDF</button>
     <button class="btn" id="btnExport">تصدير إلى Excel</button>
     <button class="btn" id="btnRefresh">تحديث</button>
     <span class="spacer"></span>
@@ -586,6 +587,91 @@ $('#editForm').addEventListener('submit', async e => {
   } catch (x) { say(msg, x.message, 'err'); }
   finally { btn.disabled = false; }
 });
+
+/* ───── تقرير للطباعة (HTML / PDF) ───── */
+function reportRows(){
+  const q = toLatin($('#q').value).trim().toLowerCase(), rg = regionFilter.value;
+  return ROWS.filter(r =>
+    (!rg || r.region === rg) &&
+    (!q || [r.name,r.mobile,r.email,r.admin,r.city,r.job].join(' ').toLowerCase().includes(q)));
+}
+function buildReport(rows){
+  const fonts = (document.querySelector('style').textContent.match(/@font-face\{[^}]+\}/g) || []).join('\n');
+  const logo = document.querySelector('.logo')?.getAttribute('src') || '';
+  const rg = regionFilter.value, q = $('#q').value.trim();
+  const scope = rg ? `منطقة ${rg}` : 'جميع المناطق';
+  const today = new Date().toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-arab', {day:'numeric', month:'long', year:'numeric'});
+  const fname = `سجل-أعضاء-أكاديمية-نخبة-التعليم-${new Date().toISOString().slice(0,10)}.html`;
+  const body = rows.map((r,i) => `<tr>
+      <td class="n">${ar(i+1)}</td>
+      <td class="nm">${esc(r.name)}</td>
+      <td>${esc(r.job)}</td>
+      <td>${esc(r.admin)}</td>
+      <td>${esc(r.region)}</td>
+      <td>${esc(r.city)}</td>
+      <td class="num">${ar(esc(r.mobile))}</td>
+      <td class="em" dir="ltr">${esc(r.email)}</td>
+    </tr>`).join('');
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سجلّ أعضاء أكاديمية نخبة التعليم</title>
+<style>
+${fonts}
+@page{size:A4 landscape; margin:12mm 11mm 14mm;
+  @bottom-center{content:"صفحة " counter(page, arabic-indic) " من " counter(pages, arabic-indic); font-family:'Noto Naskh Arabic'; font-size:9pt; color:#6c7573}}
+*{box-sizing:border-box}
+body{margin:0; background:#e9eeec; color:#1d2726; font-family:'Noto Naskh Arabic', Tahoma, sans-serif; font-size:10.5pt; line-height:1.7; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+.bar{position:sticky; top:0; z-index:2; display:flex; gap:10px; justify-content:center; padding:12px; background:#0d4a43}
+.bar button{font:inherit; font-weight:700; font-size:11pt; padding:8px 20px; border-radius:4px; cursor:pointer; border:1.5px solid #fdfdfb; background:transparent; color:#fdfdfb}
+.bar button.main{background:#fdfdfb; color:#0d4a43}
+.sheet{max-width:297mm; margin:18px auto; background:#fff; padding:14mm 12mm; box-shadow:0 10px 30px rgba(0,0,0,.15)}
+header{display:flex; align-items:center; gap:18px; padding-bottom:10px; border-bottom:3px double #8a8d8d; margin-bottom:12px}
+header img{height:84px}
+header h1{margin:0; font-family:'Aref Ruqaa', serif; font-weight:700; font-size:24pt; line-height:1.3; color:#0d4a43}
+header p{margin:2px 0 0; color:#6c7573; font-size:10pt}
+header .count{margin-inline-start:auto; text-align:center; border:1.5px solid #0b8a7a; border-radius:4px; padding:4px 16px; color:#0d4a43}
+header .count b{display:block; font-size:20pt; line-height:1.2}
+table{width:100%; border-collapse:collapse}
+thead{display:table-header-group}
+th{background:#0d4a43; color:#fff; font-weight:700; text-align:right; padding:6px 7px; font-size:10pt; border:1px solid #0d4a43}
+td{padding:5px 7px; border:1px solid #d7dedc; vertical-align:top}
+tbody tr:nth-child(even) td{background:#f1f7f5}
+tr{break-inside:avoid}
+td.n{text-align:center; color:#0b8a7a; font-weight:700; width:9mm}
+td.nm{font-weight:700; white-space:nowrap}
+td.num{white-space:nowrap}
+td.em{font-family:'Segoe UI', Tahoma, sans-serif; font-size:9.5pt; text-align:left}
+footer{margin-top:10px; display:flex; justify-content:space-between; color:#6c7573; font-size:9pt}
+.empty{text-align:center; padding:30px; color:#6c7573}
+@media print{ body{background:#fff} .bar{display:none} .sheet{margin:0; padding:0; box-shadow:none; max-width:none} }
+</style></head><body>
+<div class="bar"><button class="main" onclick="window.print()">طباعة / حفظ PDF</button><button onclick="dl()">تنزيل ملف HTML</button></div>
+<div class="sheet">
+<header>
+  ${logo ? `<img src="${logo}" alt="شعار أكاديمية نخبة التعليم">` : ''}
+  <div><h1>سجلّ أعضاء أكاديمية نخبة التعليم</h1><p>${scope}${q ? ` — نتيجة البحث عن «${esc(q)}»` : ''}، بتاريخ ${today}</p></div>
+  <div class="count"><b>${ar(rows.length)}</b>عضوًا</div>
+</header>
+${rows.length ? `<table><thead><tr><th>م</th><th>الاسم الرباعي</th><th>العمل</th><th>الإدارة التعليمية</th><th>المنطقة</th><th>المدينة</th><th>الجوال</th><th>البريد الإلكتروني</th></tr></thead><tbody>${body}</tbody></table>` : `<div class="empty">لا يوجد أعضاء في هذا النطاق.</div>`}
+<footer><span>أكاديمية نخبة التعليم</span><span>فكرة وإعداد / محمد آل سحمان</span></footer>
+</div>
+<script>
+function dl(){
+  const c = document.documentElement.cloneNode(true);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['<!DOCTYPE html>\\n' + c.outerHTML], {type:'text/html;charset=utf-8'}));
+  a.download = ${JSON.stringify(fname)}; a.click();
+}
+<\/script>
+</body></html>`;
+}
+$('#btnReport').onclick = () => {
+  const rows = reportRows();
+  if (!ROWS.length) return say($('#adminMsg'),'السجلّ فارغ، فلا يوجد ما يُطبع','err');
+  const url = URL.createObjectURL(new Blob([buildReport(rows)], {type:'text/html;charset=utf-8'}));
+  const w = window.open(url, '_blank');
+  if (!w) say($('#adminMsg'),'منع المتصفح فتح نافذة التقرير. اسمح بالنوافذ المنبثقة لهذه الصفحة ثم أعد المحاولة','err');
+};
 
 /* تصدير Excel (CSV بترميز يدعم العربية) */
 $('#btnExport').onclick = () => {
