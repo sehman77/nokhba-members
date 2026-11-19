@@ -376,8 +376,22 @@ function readForm(form){
   return d;
 }
 
+/* بيانات المثال الظاهرة في النموذج: لا يُسجَّل بها أحد من نموذج العضو */
+const normAr = s => String(s||'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[ً-ْ]/g,'').replace(/\s+/g,' ').trim();
+const EXAMPLE = {
+  names: ['محمد بن عبدالله سعيد آل سحمان','محمد بن عبدالله بن سعيد آل سحمان','محمد عبدالله سعيد آل سحمان'].map(normAr),
+  mobile: '0557376666', email: 'sehman200@gmail.com'
+};
+const EXAMPLE_MSG = 'هذه بيانات المثال الظاهرة في النموذج، اكتب بياناتك أنت';
+function isExample(k, v){
+  if (k === 'name') return EXAMPLE.names.includes(normAr(v));
+  if (k === 'mobile') return v === EXAMPLE.mobile;
+  if (k === 'email') return v === EXAMPLE.email;
+  return false;
+}
 function fieldError(k, d, form){
   const v = d[k];
+  if (form.id === 'memberForm' && v && isExample(k, v)) return EXAMPLE_MSG;
   switch (k) {
     case 'name':
       if (!v) return 'الاسم الرباعي مطلوب';
