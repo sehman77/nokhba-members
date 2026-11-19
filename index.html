@@ -657,8 +657,9 @@ body{margin:0; background:#e9eeec; color:#1d2726; font-family:'Noto Naskh Arabic
 .bar button{font:inherit; font-weight:700; font-size:11pt; padding:8px 20px; border-radius:4px; cursor:pointer; border:1.5px solid #fdfdfb; background:transparent; color:#fdfdfb}
 .bar button.main{background:#fdfdfb; color:#0d4a43}
 .bar{flex-wrap:wrap; align-items:center}
-.bar .tip{flex-basis:100%; text-align:center; color:#cfe3de; font-size:9.5pt}
-.bar .tip b{color:#fff}
+.bar .tip{flex-basis:100%; display:flex; justify-content:center}
+.bar .tip span{background:#fdf3d6; color:#0d4a43; font-size:12pt; font-weight:600; padding:6px 18px; border-radius:20px; line-height:1.6}
+.bar .tip b{color:#9c5a00}
 .sheet{max-width:297mm; margin:18px auto; background:#fff; padding:14mm 12mm; box-shadow:0 10px 30px rgba(0,0,0,.15)}
 header{display:flex; align-items:center; gap:18px; padding-bottom:10px; border-bottom:3px double #8a8d8d; margin-bottom:12px}
 header img{height:84px}
@@ -682,7 +683,7 @@ footer{margin-top:10px; display:flex; justify-content:space-between; color:#6c75
 .empty{text-align:center; padding:30px; color:#6c7573}
 @media print{ body{background:#fff} .bar{display:none} .sheet{margin:0; padding:0; box-shadow:none; max-width:none} }
 </style></head><body>
-<div class="bar"><button class="main" onclick="window.print()">طباعة / حفظ PDF</button><button onclick="dl()">تنزيل ملف HTML</button><span class="tip">للحفظ ملفًا اختر من قائمة «الوجهة»: <b>حفظ بتنسيق PDF</b>، فيأتي اسم الملف جاهزًا</span></div>
+<div class="bar"><button class="main" onclick="window.print()">طباعة / حفظ PDF</button><button onclick="dl()">تنزيل ملف HTML</button><div class="tip"><span>💡 للحفظ ملفًا: اختر من قائمة «الوجهة» <b>حفظ بتنسيق PDF</b>، فيأتي اسم الملف جاهزًا</span></div></div>
 <div class="sheet">
 <header>
   ${logo ? `<img src="${logo}" alt="شعار أكاديمية نخبة التعليم">` : ''}
